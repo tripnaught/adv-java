@@ -85,6 +85,8 @@ public class mazeLab {
 		// if the cell = 4, it has already looked in all the directions, so it gets set to 5. 
 
 		// nothing happens after that in the function. the cell gets "worn out" after looking in all four directions.
+		// this is the base case.
+
 		// java will then resume the function running one layer up. the cell was left holding the number corresponding
 		// to the number it should look at next.
 		if (!isSolved && getCellAtPosition(r, c, -1) == 0) {
@@ -181,15 +183,20 @@ public class mazeLab {
 	public static void printSolvedMaze(int[][] maze) {
 		for (int r = 0; r < maze.length; r++) {
 			for (int c = 0; c < maze[r].length; c++) {
+				// cells that aren't "worn" out will have these even numbers in them. include those in the path.
 				if (maze[r][c] == 8 || maze[r][c] == 6 || maze[r][c] == 2 || maze[r][c] == 4) {
 					System.out.print(" ");
 				} 
+				// solveMaze technically stops at the step right before overwriting the "exit cell" of the maze,
+				// so force the bottom right cell to be part of the path.
 				else if (r == maze.length - 1 && c == maze[r].length - 1) {
 					System.out.print(" ");
 				}
+				// untouched cells or worn-out cells should not be included in the path.
 				else if (maze[r][c] == 0 || maze[r][c] == 5) {
 					System.out.print("0");
 				}
+				// preserve all walls.
 				else if (maze[r][c] == 1) {
 					System.out.print("1");
 				}
