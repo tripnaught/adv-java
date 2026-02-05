@@ -11,4 +11,4 @@ Hi! I'm taking a Data Structures in Java course at my community college. This re
 - Try to keep sentences capitalized (impossible)
 
 ## In-Class Java Coding Warm-Up File
-TBD
+The file `activities/zoo.java` was a warm-up file we did in class. It was a refresher on classes and inheritance. Animal instances are added to a `zoo` array, but each Animal has special properties and overridden methods that can only be accessed via casting.
