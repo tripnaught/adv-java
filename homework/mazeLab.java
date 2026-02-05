@@ -7,7 +7,7 @@ public class mazeLab {
 
 	public static void main(String[] args) {
 		int[][] testMazeSmall = {
-				{ 0, 1, 0, 1 },
+				{ 1, 1, 0, 1 },
 				{ 0, 0, 0, 0 },
 				{ 0, 1, 1, 0 },
 				{ 1, 1, 1, 0 },
@@ -71,7 +71,7 @@ public class mazeLab {
 		System.out.println("================");
 		printMaze(maze);
 		System.out.println("================");
-		simpleSolveMaze(0, 0, 0);
+		solveMaze(0, 0, 0);
 		if (isSolved) {
 			System.out.println("Maze solved!!\n===============");
 			printSolvedMaze(maze);
@@ -100,9 +100,9 @@ public class mazeLab {
 		// holding the number corresponding
 		// to the number it should look at next.
 
-		if (maze[0][0] == 1) { // spawn in wall
-			return;
-		}
+		if (maze[0][0] == 1) { return; } // spawn in wall
+		if (maze[maze.length - 1][maze[0].length - 1] == 1) { return; } // spawn in wall
+
 		if (!isSolved) {
 			setCellAtPosition(r, c, 8);
 			if (getCellAtPosition(r - 1, c, layer) == 0) {
@@ -131,36 +131,10 @@ public class mazeLab {
 			}
 		}
 
+		// cell is a dead end :(
 		if (!isSolved) {
 			setCellAtPosition(r, c, 5);
 		}
-
-	}
-
-	public static void simpleSolveMaze(int r, int c, int layer) {
-		if (maze[0][0] == 1) { return; }// spawn in wall
-		if (isSolved) { return; } // maze solved already
-
-		setCellAtPosition(r, c, 2);
-
-		if (getCellAtPosition(r - 1, c, layer) == 0) { // check north
-			solveMaze(r - 1, c, layer + 1);
-		}
-
-		if (getCellAtPosition(r, c + 1, layer) == 0) { // check east
-			solveMaze(r, c + 1, layer + 1);
-		}
-
-		if (getCellAtPosition(r + 1, c, layer) == 0) { // check south
-			solveMaze(r + 1, c, layer + 1);
-		}
-
-		if (getCellAtPosition(r, c - 1, layer) == 0) { // check west
-			solveMaze(r, c - 1, layer + 1);
-		}
-
-		// cell was a dead end :(
-		setCellAtPosition(r, c, 5);
 
 	}
 
@@ -208,8 +182,8 @@ public class mazeLab {
 				if (maze[r][c] == 8 || maze[r][c] == 6 || maze[r][c] == 2 || maze[r][c] == 4) {
 					System.out.print(" ");
 				}
-				// solveMaze technically stops at the step right before overwriting the "exit
-				// cell" of the maze,
+				// solveMaze technically stops at the step right before 
+				// overwriting the "exit cell" of the maze,
 				// so force the bottom right cell to be part of the path.
 				else if (r == maze.length - 1 && c == maze[r].length - 1) {
 					System.out.print(" ");
