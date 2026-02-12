@@ -16,8 +16,9 @@ public class generateData {
 	public static Path path = Path.of(CSV_FILEPATH);
 
 	public static void main(String[] args) {
+		System.out.println("program started...");
 		clearCSV();
-		fillCSV(10000);
+		fillCSV(100000);
 	}
 
 	public static void clearCSV() {
@@ -73,7 +74,10 @@ public class generateData {
 				};
 				bw.write(products[randIntRange(0, products.length)]);
 				
-				bw.newLine();
+				// no extra new line with no data at the end, please
+				if (i != rows - 1) {
+					bw.newLine();
+				}
 			}
 
 			System.out.println("csv filled!");

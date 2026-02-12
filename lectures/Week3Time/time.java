@@ -1,6 +1,7 @@
 package Week3Time;
 
 public class time {
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {	
 		long sum = 0;
 		int iterations = 2000000000;
