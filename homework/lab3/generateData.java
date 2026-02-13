@@ -18,7 +18,7 @@ public class generateData {
 	public static void main(String[] args) {
 		System.out.println("program started...");
 		clearCSV();
-		fillCSV(100000);
+		fillCSV(10000);
 	}
 
 	public static void clearCSV() {
@@ -86,8 +86,8 @@ public class generateData {
 		}
 	}
 
-	// this function comes from baeldung.com, though it's similar to
-	// one used in last semester's pokemon lab to generate random ints.
+	// this function comes from baeldung.com. it's also similar to one
+	// used in last semester's pokemon lab to generate random ints.
 	public static int randIntRange(int min, int max) {
 		return (int) ((Math.random() * (max - min)) + min);
 	}
