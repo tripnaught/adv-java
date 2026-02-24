@@ -1,4 +1,3 @@
-import java.util.Arrays;
 
 public class quiz1 {
     public static int count = 0;
