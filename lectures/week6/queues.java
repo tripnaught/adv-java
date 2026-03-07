@@ -21,6 +21,8 @@ class Queue<T> {
 	public void enqueue(T item) {
 		if (size == data.length) {
 			// grow
+
+			// insert the data unwrapped (???)
 		} else {
 			this.data[this.tail] = item;
 			this.tail = (this.tail + 1) % data.length;

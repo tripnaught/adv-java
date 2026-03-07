@@ -25,6 +25,13 @@ public class acnhMidterm {
 		myStorage.add(2785);
 		myStorage.add(1890);
 
+		/* Use scanner to get user's input
+			A to add an item to storage
+			B to remove an item ("move to pockets")
+			X to search for an item
+			Y to sort (by category / ABC / time added)
+		*/
+
 
 		myStorage.printGrid();
 

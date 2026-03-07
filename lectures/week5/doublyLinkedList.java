@@ -14,8 +14,8 @@ public class doublyLinkedList {
 }
 
 class DLL<T> {
-	public Node<T> head;
-	public Node<T> tail;
+	public DLLNode<T> head;
+	public DLLNode<T> tail;
 	public int length;
 
 	public DLL() {
@@ -26,11 +26,11 @@ class DLL<T> {
 
 	public void append(T data) {
 		if (isEmpty()) {
-			this.head = new Node<T>(data);
+			this.head = new DLLNode<T>(data);
 			this.tail = head;
 			length++;
 		} else {
-			Node<T> newNode = new Node<T>(data);
+			DLLNode<T> newNode = new DLLNode<T>(data);
 			newNode.prev = tail;
 			tail.next = newNode;
 			length++;
@@ -38,7 +38,7 @@ class DLL<T> {
 	}
 
 	public void print() {
-        Node<T> curr = head;
+        DLLNode<T> curr = head;
         while (curr != null) {
             System.out.print(curr.data);
             System.out.print(" -> ");
@@ -48,7 +48,7 @@ class DLL<T> {
     }
 
     public void printReverse() {
-        Node<T> curr = tail;
+        DLLNode<T> curr = tail;
         while (curr != null) {
             System.out.print(curr.data);
             System.out.print(" <- ");
@@ -66,15 +66,15 @@ class DLL<T> {
 	}
 }
 
-class Node<T> {
+class DLLNode<T> {
     // data
     public T data;
 
     // links
-    public Node<T> next;
-	public Node<T> prev;
+    public DLLNode<T> next;
+	public DLLNode<T> prev;
 
-    public Node(T data) {
+    public DLLNode(T data) {
         this.data = data;
         this.next = null;
 		this.prev = null;
