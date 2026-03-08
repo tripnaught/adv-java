@@ -1,3 +1,4 @@
+package lab1;
 public class mazeLab {
 
 	public static int[][] maze;
