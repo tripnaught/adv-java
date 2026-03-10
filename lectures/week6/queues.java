@@ -1,8 +1,29 @@
 package week6;
 
 public class queues {
-	
+	public static void main(String[] args) {
+		Queue<Integer> q = new Queue<Integer>(5);
+
+		q.enqueue(1);
+		q.enqueue(2);
+		q.enqueue(3);
+		q.enqueue(4);
+		q.enqueue(5);
+		q.enqueue(6);
+		q.enqueue(7);
+
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+		System.out.println(q.dequeue());
+	}
 }
+
 
 class Queue<T> {
 	private Object[] data;
@@ -10,9 +31,8 @@ class Queue<T> {
 	private int head;
 	private int tail;
 
-	public Queue(int size) {
-		this.size = size;
-		data = new Object[size];
+	public Queue(int capacity) {
+		data = new Object[capacity];
 		size = 0;
 		head = 0;
 		tail = 0;
@@ -20,14 +40,18 @@ class Queue<T> {
 
 	public void enqueue(T item) {
 		if (size == data.length) {
-			// grow
-
-			// insert the data unwrapped (???)
-		} else {
-			this.data[this.tail] = item;
-			this.tail = (this.tail + 1) % data.length;
-			this.size++;
+			// queue is too small -- resize the array
+			Object[] newData = new Object[data.length * 2];
+			for (int i = 0; i < size; i++) {
+				newData[i] = data[(head + i) % data.length];
+			}
+			data = newData;
+			head = 0;
+			tail = size;
 		}
+		this.data[this.tail] = item;
+		this.tail = (this.tail + 1) % data.length;
+		this.size++;
 	}
 
 	public T dequeue() {

@@ -1,13 +1,17 @@
 package lab5;
 
-import java.util.ArrayList;
-import java.util.PriorityQueue; // <- TODO replace this !! has to be own implementation 
 import java.util.Random;
 import java.util.Scanner;
 
 public class restaurant {
-	public static PriorityQueue<Order> pq = new PriorityQueue<Order>(); // <- the queue all the orders go in
+	public static Queue<Order> orderQueue = new Queue<Order>(100); // <- the queue all the orders go in
+	public static Station[] stations = new Station[6];
 	public static int currentOrderNumber = 0;
+
+	public static LLStack<Order> compeletedOrders = new LLStack<Order>();
+	public static int dineInOrdersProcessed = 0;
+	public static int takeOutOrdersProcessed = 0;
+	public static double totalRevenue = 0;
 
 	public static Random rand = new Random();
 	public static Scanner scan = new Scanner(System.in);
@@ -15,184 +19,138 @@ public class restaurant {
 	public static void main(String[] args) {
 
 		// ===============================================================================================================
-		// #region user order loop
-		System.out.println("\nHi, welcome to McDonald's.\n");
-		while (true) {
-			System.out.println("===================================================");
-			System.out.println("\nWhat would you like to do?");
-			System.out.println("D: Dine-in order");
-			System.out.println("T: Take-out order");
-			// System.out.println("M: See the menu");
-			System.out.println("V: View order queue");
-			System.out.println("X: Close this and process orders");
-			System.out.print(">  ");
+		// #region main
+		System.out.println("\n\n\nHi, welcome to McDonald's.");
+		System.out.println("It's \u001b[33m7:00\u001b[0m... time to start your shift.\n");
 
-			String input = scan.nextLine().toUpperCase();
+		for (int i = 0; i < stations.length; i++) {
+			stations[i] = new Station(i + 1);
+		}
 
-			// DINE IN
-			if (input.charAt(0) == 'D') {
-				DineInOrder dineIn = new DineInOrder();
-				pq.add(dineIn);
-			}
+		int minutes = 0;
 
-			// TAKE OUT
-			else if (input.charAt(0) == 'T') {
-				TakeOutOrder takeOut = new TakeOutOrder();
-				pq.add(takeOut);
-			}
+		enqueueNewRandomOrder();
+		enqueueNewRandomOrder();
+		enqueueNewRandomOrder();
+		enqueueNewRandomOrder();
 
-			// MENU
-			/* else if (input.charAt(0) == 'M') {
-				System.out.println("\nBig Mac");
-				System.out.println("Quarter Pounder");
-				System.out.println("Quarter Pounder with Cheese\n");
+		do {
+			enqueueNewRandomOrder();
+			System.out.println("\u001b[31m");
+			System.out.printf("%02d:%02d - %d customers waiting\n", 7 + (minutes / 60), minutes % 60, orderQueue.size);
+			System.out.print("\u001b[0m");
 
-				System.out.println("McCrispy");
-				System.out.println("Filet-O-Fish");
-				System.out.println("Egg McMuffin\n");
-
-				System.out.println("Fries");
-				System.out.println("10 pc. Chicken McNuggets\n");
-
-				System.out.println("Coca-Cola");
-				System.out.println("Diet Coke");
-				System.out.println("Sprite");
-				System.out.println("Dr. Pepper\n");
-
-				System.out.println("Lemonade");
-				System.out.println("Sweet Tea");
-				System.out.println("McCafé");
-				System.out.println("Water\n");
-
-				System.out.println("Vanilla Cone\n");
-			} */
-
-			// VIEW QUEUE
-			else if (input.charAt(0) == 'V') {
-				System.out.println();
-				for (Object o : pq.toArray()) {
-					if (!(o instanceof Order)) {
-						continue;
-					}
-					((Order) o).print(false);
+			for (Station station : stations) {
+				if (!station.isBusy && orderQueue.size > 0) {
+					station.takeAnOrder(orderQueue.dequeue());
+				} else {
+					station.doAStep();
 				}
 			}
 
-			// CLOSE QUEUE AND PROCESS ORDERS
-			else if (input.charAt(0) == 'X') {
-				System.out.println("\nNo more orders! Processing current orders now.");
-				processOrders();
-				return;
-			} else {
-				System.out.println("Error: Invalid input! Please try again.");
-			}
-		}
+			minutes++;
+			scan.nextLine(); // wait for user before next timestep 
+		} while (orderQueue.size > 0 || isAnyStationBusy());
+
+		endOfDayStats();
 	}
 
-
+	// ===================================================================================================================
+	// #region isAnyStationBusy
+	public static boolean isAnyStationBusy() {
+		for (Station s : stations) {
+			if (s.isBusy)
+				return true;
+		}
+		return false;
+	}
 
 	// ===================================================================================================================
 	// #region enqueueNewOrder
 	public static void enqueueNewRandomOrder() {
-		final int MAX_MEALS_PER_ORDER = 5;
-		int numberOfMeals = rand.nextInt(1, MAX_MEALS_PER_ORDER + 1);
+		char[] orderTypes = { 'D', 'T', 'x', 'x' };
+		char orderType = orderTypes[rand.nextInt(orderTypes.length)];
 
-		Order newOrder = new Order();
-		for (int i = 0; i < numberOfMeals; i++) {
-			// add anywhere from 1 to MAX_MEALS_PER_ORDER meals to this order
-			Meal newMeal = new Meal(Integer.toString(rand.nextInt(0, 10))); 
-			newOrder.meals.add(newMeal);
+		if (orderType == 'D') { // dine in
+			orderQueue.enqueue(new DineInOrder());
+		} else if (orderType == 'T') { // take out
+			orderQueue.enqueue(new TakeOutOrder());
+		} else { // no customer this step
+			;
 		}
-		newOrder.price = newOrder.calculateAPrice(numberOfMeals);
 	}
 
 	// ===================================================================================================================
-	// #region processOrders()
-	public static void processOrders() {
-		
+	// #region endOfDayStats
+	public static void endOfDayStats() {
+		System.out.println("\u001b[33m================ END OF DAY SUMMARY ===============\u001b[0m");
+		System.out.printf("Customers/orders processed: %d\n",
+				dineInOrdersProcessed + takeOutOrdersProcessed);
+		System.out.printf("Dine-in orders processed:   %d\n", dineInOrdersProcessed);
+		System.out.printf("Take-out orders processed:  %d\n",
+				takeOutOrdersProcessed);
+		System.out.printf("Total revenue:              $%.2f\n", totalRevenue);
 
-		LLStack<Order> compeletedOrders = new LLStack<Order>();
-		int dineInOrdersProcessed = 0;
-		int takeOutOrdersProcessed = 0;
-		double totalRevenue = 0;
-
-		try {
-			for (Object element : pq.toArray()) {
-				if (!(element instanceof Order)) {
-					continue;
-				}
-				Order o = (Order) element;
-				System.out.println();
-				o.print(false);
-
-				while (!o.meals.isEmpty()) { // loop thru meals in order
-					Thread.sleep(rand.nextInt(1000, 1800));
-					Meal currentMeal = o.meals.removeFirst();
-					System.out.printf("Now making %s:\n", currentMeal.mealName);
-					while (!currentMeal.ingredients.isEmpty()) { // loop thru ingredients in meal
-						System.out.printf("\t• %s...\n", currentMeal.ingredients.pop());
-						Thread.sleep(rand.nextInt(200, 1000));
-					}
-					System.out.printf("\t%s completed.\n", currentMeal.mealName);
-					Thread.sleep(rand.nextInt(100, 200));
-				}
-
-				System.out.printf("\u001b[32mOrder [%d] is ready!\u001b[0m\n", o.orderNumber);
-				compeletedOrders.push(o);
-				if (o instanceof DineInOrder) {
-					dineInOrdersProcessed++;
-				} else if (o instanceof TakeOutOrder) {
-					takeOutOrdersProcessed++;
-				}
-				totalRevenue += o.price;
-
-				System.out.println("================ END OF DAY SUMMARY ===============");
-				System.out.printf("Customers/orders processed: %d\n",
-						dineInOrdersProcessed + takeOutOrdersProcessed);
-				System.out.printf("Dine-in orders processed:   %d\n", dineInOrdersProcessed);
-				System.out.printf("Take-out orders processed:  %d\n", takeOutOrdersProcessed);
-				System.out.printf("Total revenue:              $%.2f\n", totalRevenue);
-
-				System.out.println("\nThanks you for choosing McDonald's! Please come back soon!");
-				System.out.println("===================================================");
-
-			}
-		} catch (InterruptedException e) {
-			System.out.println("Error: sleep interrupted");
-			System.out.println("(this REALLY shouldn't ever happen)");
-		}
+		System.out.println("\nThanks you for choosing McDonald's! Please come back soon!");
+		System.out.println("===================================================");
 	}
 }
+
+
+
+
+
 
 // =======================================================================================================================
 // #region Station
 class Station {
 	public int stationNumber;
 	public Order currentOrder;
+	public boolean isBusy;
 
 	public Station(int number) {
 		this.stationNumber = number;
 		this.currentOrder = null;
+		this.isBusy = false;
 	}
 
-	public boolean isBusy() {
-		return (currentOrder == null) ? false : true;
+	public void takeAnOrder(Order o) {
+		currentOrder = o;
+		isBusy = true;
+		System.out.printf("Station %d took Order %d.\n", stationNumber, o.orderNumber);
 	}
 
 	public void doAStep() {
-		if (!isBusy()) {
-			System.out.printf("\u001b[31mStation %d has nothing to do!\u001b[0m");
+		if (!isBusy) {
+			System.out.printf("\u001b[36mStation %d has nothing to do!\u001b[0m\n", stationNumber);
 			return;
 		}
-		
+		String nextIngredient = currentOrder.meal.ingredients.pop();
+		if (nextIngredient == null) {
+			System.out.printf("Station %d finished Customer %d's %s. \u001b[32mOrder up!\u001b[0m\n", stationNumber,
+					currentOrder.orderNumber, currentOrder.meal.mealName);
+
+			restaurant.compeletedOrders.push(currentOrder);
+			if (currentOrder instanceof DineInOrder) {
+				restaurant.dineInOrdersProcessed++;
+			} else if (currentOrder instanceof TakeOutOrder) {
+				restaurant.takeOutOrdersProcessed++;
+			}
+			restaurant.totalRevenue += currentOrder.price;
+			currentOrder = null;
+			isBusy = false;
+			return;
+		}
+		System.out.printf("Station %d prepped the %s for #%d's %s.\n", stationNumber, nextIngredient,
+				currentOrder.orderNumber, currentOrder.meal.mealName);
+
 	}
-	// TODO TODO TODO
 }
 
 // =======================================================================================================================
 // #region Order
-class Order implements Comparable<Order> {
-	ArrayList<Meal> meals;
+class Order {
+	Meal meal;
 	int orderNumber;
 	double price;
 
@@ -200,57 +158,15 @@ class Order implements Comparable<Order> {
 		restaurant.currentOrderNumber++;
 		this.orderNumber = restaurant.currentOrderNumber;
 
-		meals = new ArrayList<Meal>();
+		this.meal = new Meal(Integer.toString(restaurant.rand.nextInt(0, 10)));
+		this.price = calculateAPrice();
 
-		// while (true) {
-		// 	System.out.println("\nType what you'd like to order,");
-		// 	System.out.println("or type \"END\" to end your order.");
-		// 	System.out.print(">  ");
-		// 	String input = restaurant.scan.nextLine();
-		// 	if (input.toUpperCase().equals("END")) {
-		// 		break;
-		// 	} else {
-		// 		Meal meal = new Meal(input);
-		// 		if (!meal.ingredients.isEmpty()) {
-		// 			meals.add(meal);
-		// 		}
-		// 	}
-		// }
-		// System.out.println("You ordered...");
-		// this.price = this.print(true);
 	}
 
-	@Override
-	public int compareTo(Order o) {
-		// if (o instanceof DineInOrder && this instanceof TakeOutOrder) {
-		// return (100);
-		// } else if (o instanceof TakeOutOrder && this instanceof DineInOrder) {
-		// return (-100);
-		// } else if (o instanceof TakeOutOrder && this instanceof TakeOutOrder ||
-		// o instanceof DineInOrder && this instanceof DineInOrder) {
-		// return (this.orderNumber - o.orderNumber);
-		// }
-		return 0;
-	}
-
-	public double calculateAPrice(int numberOfMeals) {
+	public double calculateAPrice() {
 		Random rand = new Random();
-		int dollars = rand.nextInt(numberOfMeals * 3, numberOfMeals * 5);
+		int dollars = rand.nextInt(1, 10);
 		int cents = rand.nextInt(10, 99);
-		return dollars + ((double) cents / 100);
-	}
-
-	public double print(boolean shouldShowPrice) {
-		for (Meal meal : meals) {
-			System.out.println("\t" + meal.mealName);
-		}
-		Random rand = new Random();
-		int dollars = rand.nextInt(meals.size() * 3, meals.size() * 5);
-		int cents = rand.nextInt(10, 99);
-		if (shouldShowPrice) {
-			System.out.printf("Your total is \u001b[33m[$%d.%d]\u001b[0m, and\n", dollars, cents);
-			System.out.printf("your order number is \u001b[36m[%d]\u001b[0m.\n", orderNumber);
-		}
 		return dollars + ((double) cents / 100);
 	}
 }
@@ -259,13 +175,8 @@ class Order implements Comparable<Order> {
 // #region DineInOrder
 class DineInOrder extends Order {
 	public DineInOrder() {
-		System.out.println("\nNew Dine-In Order...");
 		super();
-	}
-
-	public double print(boolean shouldShowPrice) {
-		System.out.printf("Dine-In Order \u001b[36m[%d]\u001b[0m.\n", orderNumber);
-		return super.print(shouldShowPrice);
+		System.out.printf("Customer %d placed a dine-in order for... %s!\n", this.orderNumber, this.meal.mealName);
 	}
 }
 
@@ -273,13 +184,8 @@ class DineInOrder extends Order {
 // #region TakeOutOrder
 class TakeOutOrder extends Order {
 	public TakeOutOrder() {
-		System.out.println("\nNew Take-Out Order...");
 		super();
-	}
-
-	public double print(boolean shouldShowPrice) {
-		System.out.printf("Take-Out Order \u001b[36m[%d]\u001b[0m.\n", orderNumber);
-		return super.print(shouldShowPrice);
+		System.out.printf("Customer %d placed a take-out order for... %s!\n", this.orderNumber, this.meal.mealName);
 	}
 }
 
@@ -450,7 +356,6 @@ class Meal {
 				System.err.println("Error: Invalid menu item!");
 				return;
 		}
-		System.out.println("One " + mealName + ", coming up!");
 
 	}
 }
@@ -480,7 +385,8 @@ class LLStack<T> {
 			this.head = this.head.next;
 			length--;
 		} else {
-			System.err.println("error: attempting to remove from empty stack");
+			// System.err.println("error: attempting to remove from empty stack");
+			// this warning was getting annoying
 		}
 		return result;
 	}
@@ -501,9 +407,49 @@ class LLStack<T> {
 }
 
 // =======================================================================================================================
-// #region LLQueue
-class LLQueue<T> {
+// #region Queue
+class Queue<T> {
+	private Object[] data;
+	public int size;
+	private int head;
+	private int tail;
 
+	public Queue(int capacity) {
+		data = new Object[capacity];
+		size = 0;
+		head = 0;
+		tail = 0;
+	}
+
+	public void enqueue(T item) {
+		if (size == data.length) {
+			Object[] newData = new Object[data.length * 2];
+
+			for (int i = 0; i < size; i++) {
+				newData[i] = data[(head + i) % data.length];
+			}
+
+			data = newData;
+			head = 0;
+			tail = size;
+		}
+		this.data[this.tail] = item;
+		this.tail = (this.tail + 1) % data.length;
+		this.size++;
+	}
+
+	public T dequeue() {
+		T result = null;
+		if (size == 0) {
+			System.err.println("error: removing from empty queue!");
+		} else {
+			result = (T) this.data[this.head];
+			this.data[this.head] = null;
+			this.head = (this.head + 1) % data.length;
+			this.size--;
+		}
+		return result;
+	}
 }
 
 // =======================================================================================================================
