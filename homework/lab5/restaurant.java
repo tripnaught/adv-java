@@ -9,6 +9,7 @@ public class restaurant {
 	public static PriorityQueue<Order> pq = new PriorityQueue<Order>(); // <- the queue all the orders go in
 	public static int currentOrderNumber = 0;
 
+	public static Random rand = new Random();
 	public static Scanner scan = new Scanner(System.in);
 
 	public static void main(String[] args) {
@@ -17,24 +18,32 @@ public class restaurant {
 		// #region user order loop
 		System.out.println("\nHi, welcome to McDonald's.\n");
 		while (true) {
-			System.out.println("=========================================================");
+			System.out.println("===================================================");
 			System.out.println("\nWhat would you like to do?");
 			System.out.println("D: Dine-in order");
 			System.out.println("T: Take-out order");
-			System.out.println("M: See the menu");
-			System.out.println("Q: View order queue");
+			// System.out.println("M: See the menu");
+			System.out.println("V: View order queue");
 			System.out.println("X: Close this and process orders");
 			System.out.print(">  ");
 
 			String input = scan.nextLine().toUpperCase();
+
+			// DINE IN
 			if (input.charAt(0) == 'D') {
 				DineInOrder dineIn = new DineInOrder();
 				pq.add(dineIn);
-			} else if (input.charAt(0) == 'T') {
+			}
+
+			// TAKE OUT
+			else if (input.charAt(0) == 'T') {
 				TakeOutOrder takeOut = new TakeOutOrder();
 				pq.add(takeOut);
-			} else if (input.charAt(0) == 'M') {
-				System.out.println("Big Mac");
+			}
+
+			// MENU
+			/* else if (input.charAt(0) == 'M') {
+				System.out.println("\nBig Mac");
 				System.out.println("Quarter Pounder");
 				System.out.println("Quarter Pounder with Cheese\n");
 
@@ -56,7 +65,10 @@ public class restaurant {
 				System.out.println("Water\n");
 
 				System.out.println("Vanilla Cone\n");
-			} else if (input.charAt(0) == 'Q') {
+			} */
+
+			// VIEW QUEUE
+			else if (input.charAt(0) == 'V') {
 				System.out.println();
 				for (Object o : pq.toArray()) {
 					if (!(o instanceof Order)) {
@@ -64,7 +76,10 @@ public class restaurant {
 					}
 					((Order) o).print(false);
 				}
-			} else if (input.charAt(0) == 'X') {
+			}
+
+			// CLOSE QUEUE AND PROCESS ORDERS
+			else if (input.charAt(0) == 'X') {
 				System.out.println("\nNo more orders! Processing current orders now.");
 				processOrders();
 				return;
@@ -74,10 +89,27 @@ public class restaurant {
 		}
 	}
 
+
+
+	// ===================================================================================================================
+	// #region enqueueNewOrder
+	public static void enqueueNewRandomOrder() {
+		final int MAX_MEALS_PER_ORDER = 5;
+		int numberOfMeals = rand.nextInt(1, MAX_MEALS_PER_ORDER + 1);
+
+		Order newOrder = new Order();
+		for (int i = 0; i < numberOfMeals; i++) {
+			// add anywhere from 1 to MAX_MEALS_PER_ORDER meals to this order
+			Meal newMeal = new Meal(Integer.toString(rand.nextInt(0, 10))); 
+			newOrder.meals.add(newMeal);
+		}
+		newOrder.price = newOrder.calculateAPrice(numberOfMeals);
+	}
+
 	// ===================================================================================================================
 	// #region processOrders()
 	public static void processOrders() {
-		Random rand = new Random();
+		
 
 		LLStack<Order> compeletedOrders = new LLStack<Order>();
 		int dineInOrdersProcessed = 0;
@@ -97,7 +129,7 @@ public class restaurant {
 					Thread.sleep(rand.nextInt(1000, 1800));
 					Meal currentMeal = o.meals.removeFirst();
 					System.out.printf("Now making %s:\n", currentMeal.mealName);
-					while (!currentMeal.ingredients.isEmpty()) {
+					while (!currentMeal.ingredients.isEmpty()) { // loop thru ingredients in meal
 						System.out.printf("\t• %s...\n", currentMeal.ingredients.pop());
 						Thread.sleep(rand.nextInt(200, 1000));
 					}
@@ -119,7 +151,7 @@ public class restaurant {
 						dineInOrdersProcessed + takeOutOrdersProcessed);
 				System.out.printf("Dine-in orders processed:   %d\n", dineInOrdersProcessed);
 				System.out.printf("Take-out orders processed:  %d\n", takeOutOrdersProcessed);
-				System.out.printf("Total revenue:              %f\n", totalRevenue);
+				System.out.printf("Total revenue:              $%.2f\n", totalRevenue);
 
 				System.out.println("\nThanks you for choosing McDonald's! Please come back soon!");
 				System.out.println("===================================================");
@@ -130,6 +162,31 @@ public class restaurant {
 			System.out.println("(this REALLY shouldn't ever happen)");
 		}
 	}
+}
+
+// =======================================================================================================================
+// #region Station
+class Station {
+	public int stationNumber;
+	public Order currentOrder;
+
+	public Station(int number) {
+		this.stationNumber = number;
+		this.currentOrder = null;
+	}
+
+	public boolean isBusy() {
+		return (currentOrder == null) ? false : true;
+	}
+
+	public void doAStep() {
+		if (!isBusy()) {
+			System.out.printf("\u001b[31mStation %d has nothing to do!\u001b[0m");
+			return;
+		}
+		
+	}
+	// TODO TODO TODO
 }
 
 // =======================================================================================================================
@@ -145,22 +202,22 @@ class Order implements Comparable<Order> {
 
 		meals = new ArrayList<Meal>();
 
-		while (true) {
-			System.out.println("\nType what you'd like to order,");
-			System.out.println("or type \"END\" to end your order.");
-			System.out.print(">  ");
-			String input = restaurant.scan.nextLine();
-			if (input.toUpperCase().equals("END")) {
-				break;
-			} else {
-				Meal meal = new Meal(input);
-				if (!meal.ingredients.isEmpty()) {
-					meals.add(meal);
-				}
-			}
-		}
-		System.out.println("You ordered...");
-		this.price = this.print(true);
+		// while (true) {
+		// 	System.out.println("\nType what you'd like to order,");
+		// 	System.out.println("or type \"END\" to end your order.");
+		// 	System.out.print(">  ");
+		// 	String input = restaurant.scan.nextLine();
+		// 	if (input.toUpperCase().equals("END")) {
+		// 		break;
+		// 	} else {
+		// 		Meal meal = new Meal(input);
+		// 		if (!meal.ingredients.isEmpty()) {
+		// 			meals.add(meal);
+		// 		}
+		// 	}
+		// }
+		// System.out.println("You ordered...");
+		// this.price = this.print(true);
 	}
 
 	@Override
@@ -174,6 +231,13 @@ class Order implements Comparable<Order> {
 		// return (this.orderNumber - o.orderNumber);
 		// }
 		return 0;
+	}
+
+	public double calculateAPrice(int numberOfMeals) {
+		Random rand = new Random();
+		int dollars = rand.nextInt(numberOfMeals * 3, numberOfMeals * 5);
+		int cents = rand.nextInt(10, 99);
+		return dollars + ((double) cents / 100);
 	}
 
 	public double print(boolean shouldShowPrice) {
@@ -227,8 +291,9 @@ class Meal {
 
 	public Meal(String meal) {
 		ingredients = new LLStack<String>();
-		switch (meal.toUpperCase()) {
+		switch (meal.toUpperCase()) { // <- all the ingredient lists are in here
 			case "BIG MAC":
+			case "0":
 				ingredients.push("top bun");
 				ingredients.push("burger patty");
 				ingredients.push("pickles");
@@ -249,6 +314,7 @@ class Meal {
 
 			case "QUARTER POUNDER":
 			case "HAMBURGER":
+			case "1":
 				ingredients.push("top bun");
 				ingredients.push("pickles");
 				ingredients.push("mustard");
@@ -263,6 +329,7 @@ class Meal {
 
 			case "QUARTER POUNDER WITH CHEESE":
 			case "CHEESEBURGER":
+			case "2":
 				ingredients.push("top bun");
 				ingredients.push("pickles");
 				ingredients.push("mustard");
@@ -279,6 +346,7 @@ class Meal {
 
 			case "MCCRISPY":
 			case "CHICKEN SANDWICH":
+			case "3":
 				ingredients.push("top bun");
 				ingredients.push("mayonnaise");
 				ingredients.push("pickles");
@@ -293,6 +361,7 @@ class Meal {
 			case "CHICKEN NUGGETS":
 			case "10 PC CHICKEN NUGGETS":
 			case "10 PC. CHICKEN NUGGETS":
+			case "4":
 				ingredients.push("nuggets");
 				ingredients.push("package");
 
@@ -301,6 +370,7 @@ class Meal {
 
 			case "FILET-O-FISH":
 			case "FILET O FISH":
+			case "5":
 				ingredients.push("top bun");
 				ingredients.push("tartar sauce");
 				ingredients.push("fish patty");
@@ -313,6 +383,7 @@ class Meal {
 
 			case "MCMUFFIN":
 			case "EGG MCMUFFIN":
+			case "6":
 				ingredients.push("top english muffin");
 				ingredients.push("ham");
 				ingredients.push("egg");
@@ -325,6 +396,7 @@ class Meal {
 
 			case "FRIES":
 			case "FRENCH FRIES":
+			case "7":
 				ingredients.push("fries");
 				ingredients.push("package");
 
@@ -343,6 +415,7 @@ class Meal {
 			case "LEMONADE":
 			case "SWEET TEA":
 			case "DRINK":
+			case "8":
 				ingredients.push("straw");
 				ingredients.push("lid");
 				ingredients.push("ice");
@@ -354,6 +427,7 @@ class Meal {
 
 			case "COFFEE":
 			case "MCCAFE":
+			case "9":
 				ingredients.push("lid");
 				ingredients.push("sugar");
 				ingredients.push("cream");
@@ -363,19 +437,13 @@ class Meal {
 				this.mealName = "McCafé®";
 				break;
 
-			case "WATER":
-			case "WATER BOTTLE":
-				ingredients.push("water bottle");
-
-				this.mealName = "DASANI® Water";
-				break;
-
 			case "CONE":
 			case "ICE CREAM":
 			case "ICE CREAM CONE":
 			case "VANILLA CONE":
 			case "VANILLA ICE CREAM CONE":
-				System.err.println("Oops, our ice cream machine is broken right now :(");
+			case "-1":
+				System.err.println("Oops, our ice cream machine is broken right now :("); // easter egg
 				return;
 
 			default:
